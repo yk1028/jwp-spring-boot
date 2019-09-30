@@ -11,6 +11,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import support.version.BlogVersion;
 
 import javax.servlet.Filter;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -21,6 +22,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler(PREFIX_STATIC_RESOURCES + "/" + version.getVersion() + "/css/**")
+                .addResourceLocations("classpath:/static/css/")
+                .setCacheControl(CacheControl.maxAge(31536000, TimeUnit.MILLISECONDS));
+
+
+        registry.addResourceHandler(PREFIX_STATIC_RESOURCES + "/" + version.getVersion() + "/js/**")
+                .addResourceLocations("classpath:/static/js/")
+                .setCacheControl(CacheControl.noCache().cachePrivate());
+//
         registry.addResourceHandler(PREFIX_STATIC_RESOURCES + "/" + version.getVersion() + "/**")
                 .addResourceLocations("classpath:/static/")
                 .setCacheControl(CacheControl.noCache().cachePrivate());
