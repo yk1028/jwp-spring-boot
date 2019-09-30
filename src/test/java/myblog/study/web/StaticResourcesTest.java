@@ -1,5 +1,6 @@
 package myblog.study.web;
 
+import com.google.common.net.HttpHeaders;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -26,6 +27,26 @@ public class StaticResourcesTest {
 
     @Autowired
     private BlogVersion version;
+
+    @Test
+    void helloworld() {
+        EntityExchangeResult<String> response = client
+                .get()
+                .uri("/helloworld")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectHeader()
+                .cacheControl(CacheControl.empty())
+                .expectBody(String.class)
+                .returnResult();
+
+        String etag = response
+                .getResponseHeaders()
+                .getETag();
+
+        assertThat(etag).isNull();
+    }
 
     @Test
     @DisplayName("모든 정적 자원에 대해 no-cache, private 설정을 하고 테스트 코드를 통해 검증한다.")
@@ -115,22 +136,27 @@ public class StaticResourcesTest {
     }
 
     @Test
-    void helloworld() {
+    @DisplayName("모든 정적 자원에 대해 no-cache, no-store 설정을 한다.")
+    void get_static_resources_no_cache_no_store() {
+        String uri = PREFIX_STATIC_RESOURCES + "/" + version.getVersion() + "/js/index.js";
         EntityExchangeResult<String> response = client
-                    .get()
-                    .uri("/helloworld")
+                .get()
+                .uri(uri)
                 .exchange()
-                    .expectStatus()
-                        .isOk()
-                    .expectHeader()
-                        .cacheControl(CacheControl.empty())
-                    .expectBody(String.class)
-                        .returnResult();
+                .expectStatus()
+                .isOk()
+                .expectHeader()
+                .valueEquals(HttpHeaders.CACHE_CONTROL, "no-cache, no-store")
+                .expectBody(String.class)
+                .returnResult();
 
-        String etag = response
-                .getResponseHeaders()
-                .getETag();
+        logger.debug("body : {}", response.getResponseBody());
 
-        assertThat(etag).isNull();
+        client
+                .get()
+                .uri(uri)
+                .exchange()
+                .expectStatus()
+                .isOk();
     }
 }
